@@ -111,6 +111,15 @@ app.MapGet("/submissions", async () =>
     // Values come from visitors, so they are always HTML-encoded.
     string Encode(object? value) => WebUtility.HtmlEncode(value?.ToString() ?? "");
 
+    // The list is public, so email addresses are shortened: "ada@example.com" -> "ad***@example.com".
+    string ShortenEmail(string email)
+    {
+        var at = email.IndexOf('@');
+        var local = at < 0 ? email : email[..at];
+        var domain = at < 0 ? "" : email[at..];
+        return (local.Length > 2 ? local[..2] : local[..Math.Min(1, local.Length)]) + "***" + domain;
+    }
+
     var html = new StringBuilder();
     html.AppendLine("<!DOCTYPE html>");
     html.AppendLine("<html lang=\"en\">");
@@ -150,7 +159,13 @@ app.MapGet("/submissions", async () =>
             html.AppendLine($"            <td>{Encode(row.Timestamp?.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss"))}</td>");
             foreach (var column in columns)
             {
-                html.AppendLine($"            <td>{Encode(row.TryGetValue(column, out var value) ? value : "")}</td>");
+                var text = row.TryGetValue(column, out var value) ? value?.ToString() ?? "" : "";
+                if (text.Length > 0 && column.Contains("email", StringComparison.OrdinalIgnoreCase))
+                {
+                    text = ShortenEmail(text);
+                }
+
+                html.AppendLine($"            <td>{Encode(text)}</td>");
             }
             html.AppendLine("          </tr>");
         }
