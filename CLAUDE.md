@@ -36,6 +36,7 @@ A small website where students practice **HTML forms** and **CSS**. The teacher 
 - It saves each submission as a row in **Azure Table Storage**.
 - Keep it minimal. It should store whatever fields the form sends, so students can add fields without touching the backend.
 - Never commit secrets or connection strings. Use environment variables or Container App secrets.
+- The `Dockerfile` (repo root) is multi-stage and runs as a non-root user on port 8080. Build with `docker build -t form-dojo:local .`; the container needs `STORAGE_CONNECTION_STRING` pointing to a reachable table service.
 
 ## Hosting and deployment
 
