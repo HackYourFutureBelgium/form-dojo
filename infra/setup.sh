@@ -10,7 +10,7 @@ export MSYS_NO_PATHCONV=1
 
 # ---- Settings (change these if you need to) ----
 APP="form-dojo"
-LOCATION="westeurope"
+LOCATION="northeurope"
 GITHUB_REPO="HackYourFutureBelgium/form-dojo"
 GITHUB_BRANCH="main"
 
