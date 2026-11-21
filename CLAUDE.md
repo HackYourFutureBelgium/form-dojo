@@ -24,14 +24,15 @@ A small website where students practice **HTML forms** and **CSS**. The teacher 
 ## Student-facing site
 
 - Plain HTML and CSS only. No JavaScript, no frameworks, no build step.
-- Files: `index.html` and `styles.css`.
+- Files live in the `site/` folder: `index.html`, `styles.css` and `thanks.html`.
 - The form submits (`method="post"`) to the backend endpoint below.
 - Keep the code simple and readable. Students must be able to understand every line.
 
 ## Backend
 
 - Written in **C#** (ASP.NET Core minimal API). Use the Azure.Data.Tables package for Table Storage.
-- The API runs in the same container as the site. It serves `index.html` and `styles.css` as static files and handles the form POST.
+- The project is `src/FormDojo`. It serves the `site/` folder as static files (folder set by the `SITE_DIR` environment variable) and handles `POST /submit`, then redirects to `thanks.html`.
+- The storage connection string comes from `STORAGE_CONNECTION_STRING`. It defaults to Azurite for local development (`docker run -p 10002:10002 mcr.microsoft.com/azure-storage/azurite azurite-table --tableHost 0.0.0.0`, then `dotnet run --project src/FormDojo`).
 - It saves each submission as a row in **Azure Table Storage**.
 - Keep it minimal. It should store whatever fields the form sends, so students can add fields without touching the backend.
 - Never commit secrets or connection strings. Use environment variables or Container App secrets.
