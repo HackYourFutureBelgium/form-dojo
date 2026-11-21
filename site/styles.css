@@ -43,3 +43,20 @@ footer {
   border-top: 1px solid #cccccc;
   font-size: 0.875rem;
 }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+th,
+td {
+  padding: 6px 8px;
+  border: 1px solid #cccccc;
+  text-align: left;
+}
+
+th {
+  background-color: #f0f0f0;
+}

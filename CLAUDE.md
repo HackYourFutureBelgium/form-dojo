@@ -31,7 +31,7 @@ A small website where students practice **HTML forms** and **CSS**. The teacher 
 ## Backend
 
 - Written in **C#** (ASP.NET Core minimal API). Use the Azure.Data.Tables package for Table Storage.
-- The project is `src/FormDojo`. It serves the `site/` folder as static files (folder set by the `SITE_DIR` environment variable) and handles `POST /submit`, then redirects to `thanks.html`.
+- The project is `src/FormDojo`. It serves the `site/` folder as static files (folder set by the `SITE_DIR` environment variable) and handles `POST /submit` (then redirects to `thanks.html`) and `GET /submissions`, a server-rendered page that lists all saved rows in a table (values are always HTML-encoded; email values are shortened, e.g. `ad***@example.com`, because the page is public). The main page links to it.
 - The storage connection string comes from `STORAGE_CONNECTION_STRING`. It defaults to Azurite for local development (`docker run -p 10002:10002 mcr.microsoft.com/azure-storage/azurite azurite-table --tableHost 0.0.0.0`, then `dotnet run --project src/FormDojo`).
 - It saves each submission as a row in **Azure Table Storage**.
 - Keep it minimal. It should store whatever fields the form sends, so students can add fields without touching the backend.
