@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>T-shirt order</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>T-shirt order</h1>
+    </header>
+
+    <main>
+      <p>Choose the colour and size of your t-shirt.</p>
+
+      <form method="post" action="/submit">
+        <div>
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" minlength="2" required />
+        </div>
+
+        <div>
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required />
+        </div>
+
+        <div>
+          <label for="colour">Colour</label>
+          <select id="colour" name="colour" required>
+            <option value="">Choose a colour</option>
+            <option value="red">Red</option>
+            <option value="green">Green</option>
+            <option value="blue">Blue</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="size">Size</label>
+          <select id="size" name="size" required>
+            <option value="">Choose a size</option>
+            <option value="XS">XS</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="XXL">XXL</option>
+          </select>
+        </div>
+
+        <button type="submit">Order</button>
+      </form>
+    </main>
+
+    <footer>
+      <p>form-dojo</p>
+    </footer>
+  </body>
+</html>
