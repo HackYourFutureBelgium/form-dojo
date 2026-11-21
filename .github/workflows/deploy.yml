@@ -1,0 +1,62 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Needed for the OIDC login to Azure (no passwords are stored in GitHub).
+permissions:
+  id-token: write
+  contents: read
+
+# Never run two deployments at the same time.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE_NAME: form-dojo
+
+jobs:
+  build:
+    name: Build image (pull requests)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Only checks that the image builds. Nothing is pushed or deployed.
+      - run: docker build --tag "$IMAGE_NAME:pr" .
+
+  deploy:
+    name: Push to ACR and deploy (main)
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to the container registry
+        run: az acr login --name "${{ vars.ACR_NAME }}"
+
+      - name: Build and push the image
+        run: |
+          IMAGE="${{ vars.ACR_NAME }}.azurecr.io/$IMAGE_NAME"
+          docker build --tag "$IMAGE:${{ github.sha }}" --tag "$IMAGE:latest" .
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+
+      - name: Update the Container App
+        run: |
+          az extension add --name containerapp --yes
+          az containerapp update \
+            --name "${{ vars.CONTAINER_APP }}" \
+            --resource-group "${{ vars.RESOURCE_GROUP }}" \
+            --image "${{ vars.ACR_NAME }}.azurecr.io/$IMAGE_NAME:${{ github.sha }}"
