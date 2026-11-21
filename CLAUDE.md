@@ -38,6 +38,14 @@ A small website where students practice **HTML forms** and **CSS**. The teacher 
 - Never commit secrets or connection strings. Use environment variables or Container App secrets.
 - The `Dockerfile` (repo root) is multi-stage and runs as a non-root user on port 8080. Build with `docker build -t form-dojo:local .`; the container needs `STORAGE_CONNECTION_STRING` pointing to a reachable table service.
 
+## Security
+
+- All visitor-supplied values on `/submissions` are HTML-encoded (including column names). That page also sends a strict Content-Security-Policy, and every response has `X-Content-Type-Options: nosniff`.
+- Field names must match `^[A-Za-z_][A-Za-z0-9_]{0,63}\z`; others are skipped. At most 20 fields are saved per submission, each cut at 1000 characters. Request bodies are limited to 64 KB and 50 form fields.
+- Rate limiting uses the built-in ASP.NET Core rate limiter, per client IP: 20 submissions/min, 60 list views/min and 300 requests/min in total. A rejected request gets `429` with `Retry-After`. Limits are constants at the top of `Program.cs`.
+- The real client IP is read from `X-Forwarded-For` (last entry only, added by the Container Apps ingress). Students on the same school network share one IP, so keep the limits generous.
+- Never build queries or HTML by concatenating raw visitor input.
+
 ## Hosting and deployment
 
 - Hosted as a single **Azure Container App**. One image contains the site and the API.
