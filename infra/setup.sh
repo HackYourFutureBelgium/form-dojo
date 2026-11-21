@@ -110,15 +110,29 @@ fi
 GITHUB_PRINCIPAL_ID="$(az ad sp show --id "$CLIENT_ID" --query id -o tsv)"
 
 # Only runs on the main branch of this repository may sign in.
+# Some organizations make GitHub put numeric ids in the OIDC subject
+# (repo:OWNER@OWNER_ID/REPO@REPO_ID:...), so the subject is read from GitHub's own
+# customization setting and falls back to the plain name-based form.
+GITHUB_SUBJECT_REPO="$GITHUB_REPO"
+if command -v gh >/dev/null 2>&1; then
+  OWNER_ID="$(gh api "repos/$GITHUB_REPO" --jq .owner.id 2>/dev/null || true)"
+  REPO_ID="$(gh api "repos/$GITHUB_REPO" --jq .id 2>/dev/null || true)"
+  USE_IDS="$(gh api "repos/$GITHUB_REPO/actions/oidc/customization/sub" --jq .use_immutable_subject 2>/dev/null || true)"
+  if [ "$USE_IDS" = "true" ] && [ -n "$OWNER_ID" ] && [ -n "$REPO_ID" ]; then
+    GITHUB_SUBJECT_REPO="${GITHUB_REPO%%/*}@$OWNER_ID/${GITHUB_REPO##*/}@$REPO_ID"
+  fi
+fi
 CREDENTIAL_NAME="github-$GITHUB_BRANCH"
-if [ -z "$(az ad app federated-credential list --id "$CLIENT_ID" \
-      --query "[?name=='$CREDENTIAL_NAME'].name | [0]" -o tsv)" ]; then
-  az ad app federated-credential create --id "$CLIENT_ID" --parameters "{
-    \"name\": \"$CREDENTIAL_NAME\",
-    \"issuer\": \"https://token.actions.githubusercontent.com\",
-    \"subject\": \"repo:$GITHUB_REPO:ref:refs/heads/$GITHUB_BRANCH\",
-    \"audiences\": [\"api://AzureADTokenExchange\"]
-  }" --output none
+CREDENTIAL_JSON="{
+  \"name\": \"$CREDENTIAL_NAME\",
+  \"issuer\": \"https://token.actions.githubusercontent.com\",
+  \"subject\": \"repo:$GITHUB_SUBJECT_REPO:ref:refs/heads/$GITHUB_BRANCH\",
+  \"audiences\": [\"api://AzureADTokenExchange\"]
+}"
+if [ -z "$(az ad app federated-credential list --id "$CLIENT_ID"       --query "[?name=='$CREDENTIAL_NAME'].name | [0]" -o tsv)" ]; then
+  az ad app federated-credential create --id "$CLIENT_ID" --parameters "$CREDENTIAL_JSON" --output none
+else
+  az ad app federated-credential update --id "$CLIENT_ID"     --federated-credential-id "$CREDENTIAL_NAME" --parameters "$CREDENTIAL_JSON" --output none
 fi
 
 # Push images to ACR, and update the Container App (the resource group holds only this project).
